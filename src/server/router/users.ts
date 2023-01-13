@@ -30,12 +30,20 @@ export const userRouter = createProtectedRouter()
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
 
+      const user = await ctx.prisma.user.findFirst({
+        where: { id: input.id },
+      });
+
+      if (user == null || user == undefined) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      // if null throw error
+
+      // else update
       await ctx.prisma.user.update({
         where: { id: input.id },
         data: {
-          role: {
-            push: input.role,
-          },
+          role: [...user.role, input.role],
         },
       });
     },
