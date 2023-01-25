@@ -12,10 +12,20 @@ import { env } from "../../../env/server.mjs";
 export const authOptions: NextAuthOptions = {
   // Include user.id on session
   callbacks: {
-    session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
-        session.user.role = user.role;
+    jwt({token, user, account, profile, isNewUser}) {
+      console.log("JWT: ", token, user, account, profile, isNewUser);
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+      }
+      return token;
+    },
+    session({ session, token, user }) {
+      console.log("SESSION: ", session, token, user);
+      if (session.user && token.id && token.role) {
+        console.log(user);
+        session.user.id = token.id as string;
+        session.user.role = token.role as string[];
       }
       return session;
     },
@@ -45,6 +55,10 @@ export const authOptions: NextAuthOptions = {
       clientSecret: env.LINKEDIN_CLIENT_SECRET,
     }),
   ],
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60,
+  }
 };
 
 export default NextAuth(authOptions);
